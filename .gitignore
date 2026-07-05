@@ -1,0 +1,28 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+Federated_Toxicity_Detection_Slides (1).pptx
+
+# Generated data (raw source is tracked, processed is not)
+data/processed/
+data/partitions/
+
+# Results (all experiment outputs)
+results/
+
+# Model cache
+models/cache/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo

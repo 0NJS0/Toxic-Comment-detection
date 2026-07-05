@@ -1,0 +1,25 @@
+[project]
+name = "toxic-comment-detection"
+version = "1.0.0"
+description = "Federated Edge-Based Early Toxicity Detection for Mobile Keyboards Using Lightweight Transformer Models"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    "datasets>=2.14.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "scikit-learn>=1.3.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "pyyaml>=6.0",
+    "emoji>=2.8.0",
+    "tqdm>=4.65.0",
+    "flwr>=1.6.0",
+    "streamlit>=1.28.0",
+    "plotly>=5.15.0",
+]
+
+[project.scripts]
+module-01 = "module_01_data_preparation:main"

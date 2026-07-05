@@ -1,0 +1,154 @@
+# =============================================================================
+# CONFIGURATION FILE
+# Federated Edge-Based Early Toxicity Detection for Mobile Keyboards
+# =============================================================================
+#
+# Every module reads its settings from this single file.
+# This ensures reproducibility and makes it easy to run experiments
+# with different hyperparameters.
+#
+# HOW TO USE: Change any value below and rerun the relevant module.
+# No code changes needed.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Project metadata
+# ---------------------------------------------------------------------------
+project:
+  name: "Federated Edge-Based Early Toxicity Detection"
+  description: >
+    Privacy-preserving early toxicity detection using lightweight
+    transformer models and federated learning, simulated for
+    mobile keyboard applications.
+  version: "1.0.0"
+  seed: 42  # Random seed for reproducibility of all randomness
+  output_dir: "results"
+
+results:
+  plots: "results/plots"
+  logs: "results/logs"
+  checkpoints: "results/checkpoints"
+  reports: "results/reports"
+
+# ---------------------------------------------------------------------------
+# Data paths and dataset information
+# ---------------------------------------------------------------------------
+data:
+  raw:
+    path: "data/raw"
+    train_file: "train.csv"
+    test_file: "test.csv"
+
+  processed:
+    path: "data/processed"
+    train_file: "train_cleaned.csv"
+    test_file: "test_cleaned.csv"
+
+  partitions:
+    path: "data/partitions"
+
+  # The Jigsaw dataset has 6 toxicity labels.
+  # Each comment can have MULTIPLE labels simultaneously.
+  labels:
+    - toxic
+    - severe_toxic
+    - obscene
+    - threat
+    - insult
+    - identity_hate
+
+  num_labels: 6  # Must match len(labels) above
+  max_seq_length: 192  # Max tokens per comment (DistilBERT: 512 max)
+
+# ---------------------------------------------------------------------------
+# Text preprocessing settings
+# ---------------------------------------------------------------------------
+preprocessing:
+  remove_urls: true
+  remove_mentions: true
+  lowercase: true
+  normalize_whitespace: true
+  normalize_emoji: true
+  remove_duplicates: true
+
+# ---------------------------------------------------------------------------
+# Model configuration
+# ---------------------------------------------------------------------------
+model:
+  # Options:
+  #   - "distilbert-base-uncased" (66M params, fast)
+  #   - "huawei-noah/TinyBERT_General_4L_312D" (14M params, very fast)
+  #   - "google/mobilebert-uncased" (25M params, mobile-optimized)
+  name: "distilbert-base-uncased"
+  num_labels: 6
+  dropout: 0.1
+  cache_dir: "models/cache"
+
+# ---------------------------------------------------------------------------
+# Centralized training hyperparameters
+# ---------------------------------------------------------------------------
+training:
+  batch_size: 32
+  learning_rate: 0.00002  # 2e-5
+  epochs: 3
+  weight_decay: 0.01  # L2 regularization to prevent overfitting
+  warmup_steps: 500    # Gradually increase LR at start
+  gradient_clip: 1.0   # Clip gradients to prevent explosion
+  evaluation_strategy: "epoch"
+  save_strategy: "epoch"
+  logging_steps: 100
+
+# ---------------------------------------------------------------------------
+# Federated learning settings
+# ---------------------------------------------------------------------------
+federated:
+  num_clients: 10        # Number of simulated mobile clients
+  num_rounds: 25         # Communication rounds between server and clients
+  fraction_fit: 1.0      # Fraction of clients participating each round
+  min_fit_clients: 10    # Minimum clients for a round to proceed
+  min_available_clients: 10
+  local_epochs: 1        # Epochs each client trains locally
+  iid: true              # true = IID partition, false = Non-IID
+  alpha: 0.5             # Dirichlet parameter for non-IID distribution
+  server_address: "0.0.0.0:8080"
+  strategy: "fedavg"     # Federated Averaging algorithm
+
+# ---------------------------------------------------------------------------
+# Evaluation and early detection
+# ---------------------------------------------------------------------------
+evaluation:
+  warning_threshold: 0.7   # Probability above which we flag as toxic
+  early_detection: true     # Enable prefix-based (while-typing) detection
+  prefix_increment: 1       # Character increment for prefix sliding window
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_macro
+    - f1_micro
+    - roc_auc
+    - hamming_loss
+    - subset_accuracy
+
+# ---------------------------------------------------------------------------
+# Model optimization (quantization)
+# ---------------------------------------------------------------------------
+optimization:
+  quantize: false
+  # Options: "dynamic", "static", "qat" (quantization-aware training)
+  quantization_type: "dynamic"
+
+# ---------------------------------------------------------------------------
+# Interactive simulation
+# ---------------------------------------------------------------------------
+simulation:
+  framework: "streamlit"
+  port: 8501
+  host: "0.0.0.0"
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
