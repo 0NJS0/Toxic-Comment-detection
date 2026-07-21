@@ -109,6 +109,10 @@ Both are configurable via `configs/config.yaml`.
 └── PROJECT_STATUS.md            ← Current state and progress
 ```
 
+## Used Dataset Link
+Jigsaw Toxicity Dataset by Google
+https://huggingface.co/datasets/google/jigsaw_toxicity_pred
+
 ## Citation
 
 If you use this work in your research, please cite:
