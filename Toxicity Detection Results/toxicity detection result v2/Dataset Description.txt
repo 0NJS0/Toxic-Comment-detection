@@ -1,0 +1,40 @@
+Dataset sizes:
+  Training samples: 159,571 (Training-80/Validation-10/Test-10 split)
+  Split sizes:
+  Training:     127,431 (80.0%)
+  Validation:   15,929 (10.0%)
+  Test:         15,929 (10.0%)
+  
+  Test samples:     153,164 Will be Used for prediction on federated phase
+  
+  
+ Training label distribution (positive samples):
+  toxic               : 15,294 (9.58%)
+  severe_toxic        :  1,595 (1.00%)
+  obscene             :  8,449 (5.29%)
+  threat              :    478 (0.30%)
+  insult              :  7,877 (4.94%)
+  identity_hate       :  1,405 (0.88%)
+  
+  
+Multi-label statistics:
+  Avg labels per comment:    0.22
+  Max labels per comment:    6
+  Toxic comments (any label): 16,174
+  Clean comments (no label):  143,115
+  
+  BEFORE vs AFTER CLEANING (Sample 3 comments)
+============================================================
+
+Sample #0:
+  BEFORE: Explanation
+Why the edits made under my username Hardcore Metallica Fan were reverted? They weren't ...
+  AFTER:  explanation why the edits made under my username hardcore metallica fan were reverted? they weren't ...
+
+Sample #100:
+  BEFORE: However, the Moonlite edit noted by golden daph was me (on optus ...)  Wake up wikkis.  So funny...
+  AFTER:  however, the moonlite edit noted by golden daph was me (on optus ...) wake up wikkis. so funny...
+  
+  
+  
+  

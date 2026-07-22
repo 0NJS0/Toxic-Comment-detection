@@ -1,0 +1,37 @@
+Data Preprocessing Techniques Used
+Text Cleaning (preprocessing/clean.py):
+1. URL removal — regex https?://\S+|www\.\S+
+2. @mention removal — regex @\S+
+3. Emoji normalization — emoji.demojize() converts emojis to text like :smiling_face:
+4. Lowercasing — str.lower()
+5. Whitespace normalization — collapse \s+ → single space, strip
+6. Duplicate removal — drop_duplicates() (282 removed)
+7. Empty text placeholder — empty strings → [no_text]
+Applied in order: remove URLs → remove mentions → normalize emojis → lowercase → normalize whitespace.
+Tokenization (preprocessing/tokenize.py):
+8. Stratified train/val/test split — 80/10/10, stratified on toxic/non-toxic
+9. WordPiece tokenization — DistilBERT's AutoTokenizer
+10. Padding & truncation — to max_seq_length=128
+11. Attention mask — binary mask (1=real, 0=padding)
+Label & Data Formatting:
+12. Multi-label binary encoding — 6 labels as float32 array
+13. HuggingFace Dataset packaging — DatasetDict with input_ids, attention_mask, labels
+
+Data Tokenization
+Labels shape: (127431, 6)
+  Labels shape: (15929, 6)
+  Labels shape: (15929, 6)
+  
+  Sample #0:
+  Decoded text: " true. caste / community related stuff are really difficult to grasp immediately given the complex nature of indian society. i can understand that yo...
+  input_ids (first 20): [101, 1000, 2995, 1012, 14542, 1013, 2451, 3141, 4933, 2024, 2428, 3697, 2000, 10616, 3202, 2445, 1996, 3375, 3267, 1997]
+  attention_mask (first 20): [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  Labels: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+Sample #100:
+  Decoded text: " : : could someone change the expression from fall / autumn for those of us living in the southern hemisphere? • on "...
+  input_ids (first 20): [101, 1000, 1024, 1024, 2071, 2619, 2689, 1996, 3670, 2013, 2991, 1013, 7114, 2005, 2216, 1997, 2149, 2542, 1999, 1996]
+  attention_mask (first 20): [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  Labels: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+  24,480 training sequences (6.9%) were TRUNCATED (exceeded 256 tokens)
