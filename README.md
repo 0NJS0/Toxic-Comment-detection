@@ -82,6 +82,37 @@ streamlit run simulation/app.py
 | Deployed model size (TinyBERT + INT8) | **10 MB** |
 | On-device latency | **45 ms** |
 
+## ATAM-FET Evaluation
+
+The **ATAM-FET experimental workflow** evaluates the Adaptive Toxic Attention Module (ATAM) with DistilBERT and extends the evaluation to federated learning settings.
+
+### ATAM Evaluation
+
+ATAM was integrated with DistilBERT for multi-label toxicity classification and evaluated on the Jigsaw Toxic Comment dataset.
+
+| Metric | Value |
+|--------|-------|
+| Macro-F1 | **0.6818** |
+| Micro-F1 | **0.7713** |
+| ROC-AUC | **0.9878** |
+
+The evaluation also includes per-label performance analysis, training curves, confusion matrices, and attention-based analysis.
+
+### Federated Evaluation
+
+Federated experiments were conducted under both **IID** and **non-IID** data distributions.
+
+The completed non-IID experiment used **Dirichlet partitioning (α=0.5)** across 10 simulated clients.
+
+| Metric | Value |
+|--------|-------|
+| Macro-F1 | **0.4721** |
+| Micro-F1 | **0.6084** |
+| ROC-AUC | **0.9822** |
+| Mean Client F1 | **0.4530 ± 0.0244** |
+
+The experimental notebooks and saved outputs are available in the `updates` branch.
+
 ## Non-IID Simulation
 
 Two strategies for heterogeneous client simulation:
