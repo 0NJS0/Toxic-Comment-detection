@@ -6,7 +6,7 @@ Module 2: Cleaned Text → Tokenized Dataset
 
 What this module does:
     1. Loads the cleaned dataset from Module 1
-    2. Splits training data into train (90%) and validation (10%)
+    2. Splits training data into train (80%), validation (10%), and test (10%)
     3. Loads a HuggingFace tokenizer (DistilBERT WordPiece)
     4. Tokenizes all comments (text → input_ids + attention_mask)
     5. Saves the tokenized dataset to disk
@@ -42,8 +42,6 @@ import numpy as np
 from pathlib import Path
 from typing import Dict, Tuple
 
-import torch
-from torch.utils.data import Dataset, TensorDataset
 from transformers import AutoTokenizer
 from datasets import Dataset as HFDataset, DatasetDict
 
@@ -54,6 +52,7 @@ from datasets import Dataset as HFDataset, DatasetDict
 # These match the DistilBERT tokenizer defaults.
 # We define them here so they're easy to find and modify.
 
+PAD_TOKEN_ID = 0      # DistilBERT uses token ID 0 for [PAD]
 CLS_TOKEN_ID = 101    # [CLS] token marks the start of a sequence
 SEP_TOKEN_ID = 102    # [SEP] token marks the end of a sequence
 
@@ -62,13 +61,15 @@ SEP_TOKEN_ID = 102    # [SEP] token marks the end of a sequence
 # Step 1: Load and split the cleaned data
 # ---------------------------------------------------------------------------
 
-def load_cleaned_data(config: dict) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def load_cleaned_data(config: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Load the cleaned dataset and split into train and validation.
+    Load the cleaned dataset and split into train, validation, and test.
 
     We use a stratified split to preserve the label distribution
-    in both train and validation sets. This is important because
-    the dataset is highly imbalanced (~10% toxic).
+    across all splits. This is important because the dataset is
+    highly imbalanced (~10% toxic).
+
+    Split ratio: 80% train, 10% validation, 10% test.
 
     Parameters
     ----------
@@ -77,8 +78,8 @@ def load_cleaned_data(config: dict) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     Returns
     -------
-    Tuple[pd.DataFrame, pd.DataFrame]
-        (train_dataframe, validation_dataframe)
+    Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
+        (train_dataframe, validation_dataframe, test_dataframe)
     """
     from sklearn.model_selection import train_test_split
 
@@ -91,31 +92,40 @@ def load_cleaned_data(config: dict) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     print(f"Total samples: {len(df):,}")
 
-    # Split into train (90%) and validation (10%)
-    # random_state ensures we get the same split every time
-    # stratify=df[label_cols].sum(axis=1) > 0 preserves the
-    #   proportion of toxic vs non-toxic in both splits
+    # Stratify on binary toxic/non-toxic to preserve class balance
     stratify_col = (df[label_cols].sum(axis=1) > 0).astype(int)
 
-    df_train, df_val = train_test_split(
+    # First split: 80% train, 20% temp (val + test)
+    df_train, df_temp = train_test_split(
         df,
-        test_size=0.1,
+        test_size=0.2,
         random_state=config["project"]["seed"],
         stratify=stratify_col,
+    )
+
+    # Second split: split the 20% into 10% val + 10% test
+    stratify_temp = (df_temp[label_cols].sum(axis=1) > 0).astype(int)
+    df_val, df_test = train_test_split(
+        df_temp,
+        test_size=0.5,
+        random_state=config["project"]["seed"],
+        stratify=stratify_temp,
     )
 
     print(f"\nSplit sizes:")
     print(f"  Training:     {len(df_train):,} ({100*len(df_train)/len(df):.1f}%)")
     print(f"  Validation:   {len(df_val):,} ({100*len(df_val)/len(df):.1f}%)")
+    print(f"  Test:         {len(df_test):,} ({100*len(df_test)/len(df):.1f}%)")
 
     # Show that stratification preserved label balance
     print(f"\nStratification check (% toxic in each split):")
     for col in label_cols:
         train_pct = df_train[col].mean() * 100
         val_pct = df_val[col].mean() * 100
-        print(f"  {col:20s}: train={train_pct:.2f}%  val={val_pct:.2f}%")
+        test_pct = df_test[col].mean() * 100
+        print(f"  {col:20s}: train={train_pct:.2f}%  val={val_pct:.2f}%  test={test_pct:.2f}%")
 
-    return df_train, df_val
+    return df_train, df_val, df_test
 
 
 # ---------------------------------------------------------------------------
@@ -192,23 +202,23 @@ def tokenize_texts(
     """
     print(f"  Tokenizing {len(texts):,} texts (max_length={max_length})...")
 
-    # Tokenize WITHOUT padding — sequences stay variable-length.
-    # This saves ~40% disk space vs padding every sample to max_length.
-    # Dynamic padding happens per-batch during training (DataCollatorWithPadding),
-    # which is both efficient and the standard HuggingFace practice.
+    # The tokenizer does everything in one call:
+    # - Tokenizes each text into words/subwords
+    # - Maps each token to its integer ID
+    # - Adds [CLS] at the start and [SEP] at the end
+    # - Pads shorter sequences to max_length
+    # - Truncates longer sequences to max_length
+    # - Creates attention_mask (1 for real tokens, 0 for padding)
     encoded = tokenizer(
         texts,
-        padding=False,          # no padding — store only real tokens
-        truncation=True,        # cut sequences exceeding max_length
+        padding="max_length",   # pad to max_length for batch processing
+        truncation=True,        # cut sequences longer than max_length
         max_length=max_length,
-        return_tensors="np",    # numpy arrays (jagged, variable-length)
+        return_tensors="np",    # return numpy arrays (not PyTorch yet)
     )
 
-    # Log truncation stats
-    true_lengths = [len(ids) for ids in encoded["input_ids"]]
-    truncated = sum(1 for l in true_lengths if l == max_length)
-    print(f"  Truncated: {truncated:,} / {len(texts):,} ({100*truncated/len(texts):.1f}%)")
-    print(f"  Length range: {min(true_lengths)} – {max(true_lengths)} tokens")
+    print(f"  input_ids shape:      {encoded['input_ids'].shape}")
+    print(f"  attention_mask shape: {encoded['attention_mask'].shape}")
 
     return {
         "input_ids": encoded["input_ids"],
@@ -287,7 +297,7 @@ def save_tokenized_dataset(
     Parameters
     ----------
     dataset_dict : DatasetDict
-        The tokenized dataset (train + validation).
+        The tokenized dataset (train + validation + test).
     config : dict
         Project configuration with output paths.
     """
@@ -300,12 +310,13 @@ def save_tokenized_dataset(
     # HuggingFace's save_to_disk saves all data + metadata
     dataset_dict.save_to_disk(str(output_dir))
 
-    print("  ✓ Tokenized dataset saved!")
+    print("  [OK] Tokenized dataset saved!")
 
     # Also save a small stats file for reference
     stats = {
         "train_size": len(dataset_dict["train"]),
         "validation_size": len(dataset_dict["validation"]),
+        "test_size": len(dataset_dict["test"]),
         "num_labels": len(config["data"]["labels"]),
         "max_seq_length": config["data"]["max_seq_length"],
         "model_name": config["model"]["name"],
@@ -370,13 +381,14 @@ def run_tokenization(config: dict) -> None:
     Execute the full tokenization pipeline.
 
     Steps:
-    1. Load cleaned data and split into train/validation
-    2. Load the HuggingFace tokenizer
-    3. Tokenize training texts
-    4. Tokenize validation texts
-    5. Create HuggingFace Datasets
-    6. Show sample verification
-    7. Save tokenized dataset to disk
+     1. Load cleaned data and split into train/validation/test
+     2. Load the HuggingFace tokenizer
+     3. Tokenize training texts
+     4. Tokenize validation texts
+     5. Tokenize test texts
+     6. Create HuggingFace Datasets
+     7. Show sample verification
+     8. Save tokenized dataset to disk
 
     Parameters
     ----------
@@ -391,11 +403,11 @@ def run_tokenization(config: dict) -> None:
     max_length = config["data"]["max_seq_length"]
 
     # Step 1: Load and split data
-    print("\n[1/5] Loading and splitting data...")
-    df_train, df_val = load_cleaned_data(config)
+    print("\n[1/7] Loading and splitting data...")
+    df_train, df_val, df_test = load_cleaned_data(config)
 
     # Step 2: Load tokenizer
-    print("\n[2/5] Loading tokenizer...")
+    print("\n[2/7] Loading tokenizer...")
     tokenizer = load_tokenizer(config)
 
     # Save tokenizer to tokenized folder for later use
@@ -405,46 +417,56 @@ def run_tokenization(config: dict) -> None:
     print(f"  Tokenizer saved to: {tokenizer_path}")
 
     # Step 3: Tokenize training data
-    print("\n[3/5] Tokenizing training data...")
+    print("\n[3/7] Tokenizing training data...")
     train_texts = df_train["clean_text"].tolist()
     train_encoded = tokenize_texts(train_texts, tokenizer, max_length)
 
     # Step 4: Tokenize validation data
-    print("\n[4/5] Tokenizing validation data...")
+    print("\n[4/7] Tokenizing validation data...")
     val_texts = df_val["clean_text"].tolist()
     val_encoded = tokenize_texts(val_texts, tokenizer, max_length)
 
-    # Step 5: Create datasets and save
-    print("\n[5/5] Creating and saving datasets...")
+    # Step 5: Tokenize test data
+    print("\n[5/7] Tokenizing test data...")
+    test_texts = df_test["clean_text"].tolist()
+    test_encoded = tokenize_texts(test_texts, tokenizer, max_length)
+
+    # Step 6: Create datasets
+    print("\n[6/7] Creating datasets...")
     train_dataset = create_dataset(df_train, train_encoded, label_cols, is_test=False)
     val_dataset = create_dataset(df_val, val_encoded, label_cols, is_test=False)
+    test_dataset = create_dataset(df_test, test_encoded, label_cols, is_test=False)
 
     # Combine into a DatasetDict for easy access
     dataset_dict = DatasetDict({
         "train": train_dataset,
         "validation": val_dataset,
+        "test": test_dataset,
     })
 
-    # Show sample verification
+    # Step 7: Show sample verification
+    print("\n[7/7] Verification and saving...")
     print("\n" + "-" * 40)
     print("VERIFICATION: Sample tokenized outputs")
     print("-" * 40)
     show_sample(train_dataset, tokenizer, idx=0)
     show_sample(train_dataset, tokenizer, idx=100)
 
-    # Check for truncated sequences (those at the max length limit)
-    seq_lengths = np.array([len(ids) for ids in train_dataset["input_ids"]])
-    truncated = (seq_lengths == max_length).sum()
+    # Check for any sequences that were truncated.
+    # If the last token position (index -1) has a non-pad token,
+    # the sequence was longer than max_length and got truncated.
+    input_ids_array = np.array(train_dataset["input_ids"])
+    truncated = (input_ids_array[:, -1] != PAD_TOKEN_ID).sum()
     if truncated > 0:
-        print(f"\n  ⚠ {truncated:,} training sequences ({100*truncated/len(train_dataset):.1f}%) "
+        print(f"\n  [WARN] {truncated:,} training sequences ({100*truncated/len(train_dataset):.1f}%) "
               f"were TRUNCATED (exceeded {max_length} tokens)")
     else:
-        print(f"\n  ✓ No sequences exceeded {max_length} tokens")
+        print(f"\n  [OK] No sequences exceeded {max_length} tokens")
 
     # Save
     save_tokenized_dataset(dataset_dict, config)
 
     print(f"\n" + "=" * 60)
-    print("MODULE 2 COMPLETE ✓")
+    print("MODULE 2 COMPLETE")
     print("=" * 60)
     print(f"\nTokenized dataset ready for Module 3 (Training).")

@@ -122,7 +122,7 @@ def compute_prefix_metrics(
 
         # Accuracy and F1
         from evaluation.metrics import compute_metrics
-        metrics = compute_metrics(labels, probs, label_cols=label_cols)
+        metrics = compute_metrics(probs, labels)
 
         results[key] = {
             **metrics,

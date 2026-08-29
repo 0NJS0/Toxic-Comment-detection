@@ -45,8 +45,7 @@ class DistilBERTForMultiLabelClassification(nn.Module):
         Parameters
         ----------
         model_name : str
-            HuggingFace model identifier (e.g., "distilbert-base-uncased",
-            "huawei-noah/TinyBERT_General_4L_312D")
+            HuggingFace model identifier (e.g., "distilbert-base-uncased")
         num_labels : int
             Number of output labels (6 for Jigsaw toxicity)
         dropout : float
@@ -67,7 +66,7 @@ class DistilBERTForMultiLabelClassification(nn.Module):
         )
 
         # Get the hidden size from the model config
-        # DistilBERT-base: 768, TinyBERT: 312, MobileBERT: 512
+        # DistilBERT-base: 768
         hidden_size = self.distilbert.config.hidden_size
 
         # Classification head: dropout + linear layer

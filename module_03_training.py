@@ -5,18 +5,19 @@ MODULE 3: Centralized DistilBERT Training
 ================================================================================
 
 WHAT THIS MODULE DOES
-----------------------
+---------------------
 1. Loads the tokenized dataset from Module 2 (data/processed/tokenized/)
 2. Creates PyTorch DataLoaders
 3. Initializes DistilBERT for multi-label classification
 4. Trains with BCEWithLogitsLoss + AdamW + linear schedule
 5. Evaluates on validation set after each epoch
-6. Saves model checkpoints, training curves, and metrics
+6. Evaluates on held-out test set after training
+7. Saves model checkpoints, training curves, and metrics
 
 WHY THIS MATTERS
 ----------------
 This is the central baseline model. All later experiments
-(federated learning, TinyBERT, quantization, prefix detection)
+(federated learning, ATAM, quantization, prefix detection)
 are compared against this centralized DistilBERT performance.
 
 HOW TO RUN
@@ -33,10 +34,12 @@ OUTPUT
 
     results/logs/
     ├── training_history.json
-    └── final_metrics.json
+    ├── final_metrics.json      # Validation metrics
+    └── test_metrics.json       # Held-out test set metrics
 
     results/plots/
-    └── training_curves.png
+    ├── training_curves.png
+    └── confusion_matrices.png
 
 INDEPENDENT EXECUTION
 ---------------------
