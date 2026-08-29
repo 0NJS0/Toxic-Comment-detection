@@ -22,6 +22,7 @@ project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
 from simulation.predictor import ToxicityPredictor, load_predictor
+from simulation.demo import find_best_checkpoint
 import pandas as pd
 
 
@@ -42,13 +43,34 @@ st.markdown(
 # ---- Load model ----
 @st.cache_resource
 def load_model():
-    checkpoint_path = "results/training/best_model.pt"
-    if not Path(checkpoint_path).exists():
+    from utils.config import load_config
+    config = load_config("configs/config.yaml")
+    try:
+        checkpoint_path = find_best_checkpoint(config["results"]["checkpoints"])
+    except FileNotFoundError:
         st.error(
-            f"Checkpoint not found at {checkpoint_path}. "
+            "No trained model found in results/checkpoints/. "
             "Run `uv run python module_03_training.py` first."
         )
-        st.stop()
+        raise RuntimeError(
+            "No trained model found in results/checkpoints/. "
+            "Run `uv run python module_03_training.py` first."
+        )
+
+    # A `best_model/` pretrained dir loads via from_pretrained; an epoch
+    # `checkpoint_epoch_*.pt` loads via load_predictor.
+    if Path(checkpoint_path).is_dir():
+        from models.distilbert import DistilBERTForMultiLabelClassification
+        from transformers import AutoTokenizer
+        import torch
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = DistilBERTForMultiLabelClassification.from_pretrained(
+            checkpoint_path, model_name=config["model"]["name"],
+        )
+        tokenizer = AutoTokenizer.from_pretrained(
+            str(Path(config["data"]["processed"]["path"]) / "tokenized" / "tokenizer")
+        )
+        return ToxicityPredictor(model, tokenizer, device=device)
     return load_predictor(checkpoint_path)
 
 

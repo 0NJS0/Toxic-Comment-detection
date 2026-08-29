@@ -2,7 +2,7 @@
 Knowledge Distillation for FedPref
 ====================================
 
-DistilBERT -> TinyBERT or even smaller student models.
+DistilBERT -> smaller student model.
 
 Standard KD: student trained on both:
   - Hard labels (ground truth)
@@ -29,15 +29,26 @@ def kl_div_loss(
     temperature: float = 4.0,
 ) -> torch.Tensor:
     """
-    KL divergence loss between teacher and student logits.
+    Per-label sigmoid KL divergence between student and teacher logits.
+
+    Unlike a softmax KL (which enforces "probabilities sum to one"), this
+    treats every label as an independent Bernoulli variable — the correct
+    formulation for multi-label toxicity. Under a temperature T the two
+    per-label distributions are Bernoulli(sigmoid(logit / T)) and we sum:
+
+        KL_i = q_i * log(q_i / p_i) + (1 - q_i) * log((1 - q_i) / (1 - p_i))
+
+    then average across labels and batch. The `temperature ** 2` scaling
+    keeps gradient magnitudes comparable to plain BCE (Hinton et al., 2015).
 
     Higher temperature = softer probability distribution,
     exposing more information about relative label probabilities.
     """
-    student_probs = F.log_softmax(student_logits / temperature, dim=-1)
-    teacher_probs = F.softmax(teacher_logits / temperature, dim=-1)
-    loss = F.kl_div(student_probs, teacher_probs, reduction="batchmean")
-    return loss * (temperature ** 2)
+    student_p = torch.sigmoid(student_logits / temperature).clamp(min=1e-7, max=1 - 1e-7)
+    teacher_p = torch.sigmoid(teacher_logits / temperature).clamp(min=1e-7, max=1 - 1e-7)
+    kl = teacher_p * torch.log(teacher_p / student_p) + \
+        (1 - teacher_p) * torch.log((1 - teacher_p) / (1 - student_p))
+    return kl.mean() * (temperature ** 2)
 
 
 class DistillationTrainer:
@@ -217,7 +228,7 @@ class DistillationTrainer:
         all_logits = np.concatenate(all_logits, axis=0)
         all_labels = np.concatenate(all_labels, axis=0)
 
-        return compute_metrics(all_labels, all_logits)
+        return compute_metrics(all_logits, all_labels)
 
 
 def distill_knowledge(

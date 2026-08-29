@@ -158,16 +158,11 @@ def count_lora_params(model: nn.Module) -> int:
 def freeze_base_model(model: nn.Module) -> None:
     """Freeze the base transformer encoder only (not the classification head).
 
-    For DistilBERT/TinyBERT/MobileBERT models, the base encoder is stored
-    in `model.distilbert`, `model.tinybert`, or `model.mobilebert`.
+    For DistilBERT, the base encoder is stored in `model.distilbert`.
     The classifier head (`model.classifier`) remains trainable so it can
     be learned during federated training.
     """
-    base_attr = None
-    for attr in ["distilbert", "tinybert", "mobilebert"]:
-        if hasattr(model, attr):
-            base_attr = attr
-            break
+    base_attr = "distilbert" if hasattr(model, "distilbert") else None
 
     if base_attr is None:
         print("  Warning: could not find base encoder attribute to freeze")
