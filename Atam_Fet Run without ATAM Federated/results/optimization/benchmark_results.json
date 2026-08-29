@@ -1,0 +1,55 @@
+{
+  "quantized": {
+    "name": "Quantized (INT8)",
+    "latency_ms": 94.52964026007976,
+    "latency_std_ms": 7.92160669415784,
+    "peak_memory_mb": 263.4523296356201,
+    "model_size_mb": 131.72616481781006,
+    "total_params": 23854080,
+    "trainable_params": 23854080,
+    "f1_macro": 0.6721798087656642,
+    "accuracy": 0.9249168183815683,
+    "metrics": {
+      "accuracy": 0.9249168183815683,
+      "precision": 0.6585748180880273,
+      "recall": 0.6953167565244393,
+      "f1_macro": 0.6721798087656642,
+      "f1_micro": 0.7894374914042085,
+      "precision_micro": 0.7777777777777778,
+      "recall_micro": 0.801452108349623,
+      "roc_auc": 0.9812776105627189,
+      "hamming_loss": 0.016019000983531085,
+      "subset_accuracy": 0.9249168183815683
+    }
+  },
+  "pruned_30pct": {
+    "name": "Pruned (30%)",
+    "latency_ms": 120.56247143969813,
+    "latency_std_ms": 10.075041592499716,
+    "peak_memory_mb": 506.4185543060303,
+    "model_size_mb": 253.20927715301514,
+    "total_params": 66367494,
+    "trainable_params": 66367494,
+    "f1_macro": 0.6792515726559971,
+    "accuracy": 0.9080293803754159,
+    "sparsity": {
+      "total_params": 66367494,
+      "zero_params": 12741578,
+      "sparsity": 0.19198522095771764,
+      "non_zero_params": 53625916,
+      "size_mb": 204.56663513183594
+    },
+    "metrics": {
+      "accuracy": 0.9080293803754159,
+      "precision": 0.5929786866560295,
+      "recall": 0.8013539498656611,
+      "f1_macro": 0.6792515726559971,
+      "f1_micro": 0.7726441545775936,
+      "precision_micro": 0.6856339247079186,
+      "recall_micro": 0.8849483384529461,
+      "roc_auc": 0.9874955579398638,
+      "hamming_loss": 0.01951367526733212,
+      "subset_accuracy": 0.9080293803754159
+    }
+  }
+}
