@@ -66,9 +66,10 @@ def quantize_model_dynamic(
     model.eval()
     model.cpu()
 
+    qconfig = torch.ao.quantization.default_dynamic_qconfig
     quantized = torch.ao.quantization.quantize_dynamic(
         model,
-        qconfig_spec={torch.nn.Linear: dtype},
+        qconfig_spec={torch.nn.Linear: qconfig},
         dtype=dtype,
         inplace=False,
     )

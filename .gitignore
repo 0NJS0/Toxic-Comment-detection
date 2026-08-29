@@ -9,8 +9,6 @@ wheels/
 # Virtual environments
 .venv
 
-Federated_Toxicity_Detection_Slides (1).pptx
-
 # Generated data (raw source is tracked, processed is not)
 data/processed/
 data/partitions/

@@ -269,8 +269,17 @@ def load_raw_data(config: dict) -> Tuple[pd.DataFrame, pd.DataFrame]:
     print(f"\nLoading training data from: {train_path}")
     df_train = pd.read_csv(train_path)
 
-    print(f"Loading test data from: {test_path}")
-    df_test = pd.read_csv(test_path)
+    if test_path.exists():
+        print(f"Loading test data from: {test_path}")
+        df_test = pd.read_csv(test_path)
+    else:
+        # test.csv is optional: the raw Jigsaw test set has no labels, and the
+        # pipeline derives its labeled train/validation/test splits from the
+        # training file, so a missing test.csv does not affect any later module.
+        print(f"Note: {test_path} not found - running in train-only mode.")
+        print("  (val/test splits are derived from the training data; raw "
+              "test.csv has no labels and is not used for evaluation)")
+        df_test = pd.DataFrame(columns=["id", "comment_text"])
 
     print(f"\nDataset sizes:")
     print(f"  Training samples: {len(df_train):,}")
@@ -338,6 +347,8 @@ def clean_dataframe(
     # Handle edge case: comments that become empty after cleaning
     # (e.g., comments that were ONLY a URL). We fill with a
     # placeholder so pandas doesn't treat them as NaN in CSV.
+    # astype(str) keeps an empty DataFrame (train-only mode) usable too.
+    df["clean_text"] = df["clean_text"].astype(str)
     empty_count = (df["clean_text"].str.strip() == "").sum()
     if empty_count > 0:
         print(f"  Note: {empty_count} comments became empty after cleaning (filling with '[no_text]')")
@@ -437,7 +448,7 @@ def save_processed_data(
     df_train.to_csv(train_out, index=False)
     df_test.to_csv(test_out, index=False)
 
-    print("  ✓ Data saved successfully!")
+    print("  [OK] Data saved successfully!")
 
 
 # ---------------------------------------------------------------------------
@@ -502,6 +513,6 @@ def run_data_preparation(config: dict) -> None:
     save_processed_data(df_train_clean, df_test_clean, config)
 
     print(f"\n" + "=" * 60)
-    print("MODULE 1 COMPLETE ✓")
+    print("MODULE 1 COMPLETE")
     print("=" * 60)
     print(f"\nCleaned data is ready for Module 2 (Tokenization).")
