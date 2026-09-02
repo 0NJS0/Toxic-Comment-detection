@@ -10,6 +10,9 @@ wheels/
 .venv
 
 # Generated data (raw source is tracked, processed is not)
+data/processed/
+**/data/processed/
+**/Results*/data/processed/
 
 # Results (all experiment outputs)
 
