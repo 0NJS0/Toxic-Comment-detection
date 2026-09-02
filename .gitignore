@@ -16,6 +16,13 @@ wheels/
 # Model cache
 models/cache/
 
+# Model checkpoints & weights
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+
 # IDE files
 .vscode/
 .idea/
