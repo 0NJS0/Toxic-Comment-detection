@@ -1,0 +1,16 @@
+{
+  "hostname": "e54cd19f2af7",
+  "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+  "python": "3.12.13",
+  "torch": "2.10.0+cu128",
+  "cuda_available": true,
+  "device_name": "Tesla T4",
+  "numpy": "2.0.2",
+  "seed": 42,
+  "config_hash": "5cc11887a445",
+  "transformers": "5.0.0",
+  "datasets": "5.0.0",
+  "flwr": "1.35.0",
+  "sklearn": "1.6.1",
+  "pandas": "2.3.3"
+}

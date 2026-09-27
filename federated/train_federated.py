@@ -46,7 +46,7 @@ def tokenize_partition(
     """Tokenize a single client's partition into HF Dataset."""
     encoded = tokenizer(
         texts,
-        padding=False,
+        padding="max_length",
         truncation=True,
         max_length=max_length,
         return_tensors="np",
@@ -152,6 +152,17 @@ def run_experiment(config: dict) -> Dict:
     from transformers import AutoTokenizer
     from training.train import MultiLabelDataCollator
     from federated.client import FedPrefClient
+
+    # FedPref: always use LoRA personalization (frozen base + LoRA + head).
+    # Keeps communication tiny and matches the paper's design.
+    # NOTE: direct assignment (not setdefault) so the config.yaml default of
+    # `method: "none"` is overridden here — this path always runs with LoRA.
+    config.setdefault("personalization", {})
+    config["personalization"]["method"] = "lora"
+    config["personalization"].setdefault("lora_r", 8)
+    config["personalization"].setdefault("lora_alpha", 16)
+    config["personalization"].setdefault("lora_dropout", 0.1)
+    config["personalization"].setdefault("lora_modules", ["q_lin", "v_lin"])
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"\nDevice: {device}")

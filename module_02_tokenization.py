@@ -5,9 +5,9 @@ MODULE 2: Tokenization
 ================================================================================
 
 WHAT THIS MODULE DOES
-----------------------
+---------------------
 1. Loads the cleaned dataset from Module 1 (data/processed/train_cleaned.csv)
-2. Splits training data into 90% train / 10% validation (stratified)
+2. Splits training data into 80% train / 10% validation / 10% test (stratified)
 3. Loads the DistilBERT WordPiece tokenizer
 4. Converts text → input_ids + attention_mask
 5. Creates HuggingFace Dataset objects
@@ -27,8 +27,9 @@ HOW TO RUN
 OUTPUT
 ------
     data/processed/tokenized/
-    ├── train/          # Tokenized training data
-    ├── validation/     # Tokenized validation data
+    ├── train/          # Tokenized training data (80%)
+    ├── validation/     # Tokenized validation data (10%)
+    ├── test/           # Tokenized test data (10%)
     ├── tokenizer/      # Saved tokenizer (for inference)
     ├── dataset_info.json
     └── stats.pkl       # Dataset statistics

@@ -58,7 +58,7 @@ data:
     - identity_hate
 
   num_labels: 6  # Must match len(labels) above
-  max_seq_length: 192  # Max tokens per comment (DistilBERT: 512 max)
+  max_seq_length: 256  # Max tokens per comment (DistilBERT: 512 max)
 
 # ---------------------------------------------------------------------------
 # Text preprocessing settings
@@ -75,14 +75,11 @@ preprocessing:
 # Model configuration
 # ---------------------------------------------------------------------------
 model:
-  # Options:
-  #   - "distilbert-base-uncased" (66M params, fast)
-  #   - "huawei-noah/TinyBERT_General_4L_312D" (14M params, very fast)
-  #   - "google/mobilebert-uncased" (25M params, mobile-optimized)
   name: "distilbert-base-uncased"
   num_labels: 6
   dropout: 0.1
   cache_dir: "models/cache"
+  use_atam: false  # Set true to use ATAM (Adaptive Toxic Attention Module)
 
 # ---------------------------------------------------------------------------
 # Centralized training hyperparameters
@@ -90,13 +87,24 @@ model:
 training:
   batch_size: 32
   learning_rate: 0.00002  # 2e-5
-  epochs: 3
+  epochs: 6
   weight_decay: 0.01  # L2 regularization to prevent overfitting
   warmup_steps: 500    # Gradually increase LR at start
   gradient_clip: 1.0   # Clip gradients to prevent explosion
   evaluation_strategy: "epoch"
   save_strategy: "epoch"
   logging_steps: 100
+  early_stopping_patience: 2  # Stop if no val F1-macro improvement for this many epochs
+
+# ---------------------------------------------------------------------------
+# Personalization (LoRA)
+# ---------------------------------------------------------------------------
+personalization:
+  method: "none"            # "lora" to inject LoRA. Module 5 (FedPref) overrides this automatically.
+  lora_r: 8                  # LoRA rank
+  lora_alpha: 16             # LoRA scaling factor
+  lora_dropout: 0.1
+  lora_modules: ["q_lin", "v_lin"]  # Attention projections to adapt
 
 # ---------------------------------------------------------------------------
 # Federated learning settings
@@ -112,6 +120,43 @@ federated:
   alpha: 0.5             # Dirichlet parameter for non-IID distribution
   server_address: "0.0.0.0:8080"
   strategy: "fedavg"     # Federated Averaging algorithm
+
+# ---------------------------------------------------------------------------
+# Module 0: Offline LLM teacher pass (evidence-anchored supervision)
+# ---------------------------------------------------------------------------
+# The teacher reads the FULL comment once and produces, per label:
+#   1. soft_targets (0-1 confidence)      -> the "final decision"
+#   2. evidence spans (char offsets)      -> define the ANCHOR position
+# Both are cached to disk, so the 3B model is only run once (Module 0).
+llm:
+  teacher: "meta-llama/Llama-3.2-3B-Instruct"
+  cache_dir: "models/cache"        # HF model cache (reused across modules)
+  mock: false                      # true = deterministic fake spans (smoke test)
+  subsample_size: 25000            # stratified: all toxic + balanced clean
+  stratify_toxic: true
+  span_only: true                  # compact JSON prompt = cheaper generation
+  temperature: 1.0                 # teacher soft-target temperature
+  generation_max_new_tokens: 220
+  batch_size: 16                   # teacher generation batch
+  flush_batches: 10                # cache shard flush cadence
+  max_minutes: 300                 # wall-clock budget for an interrupted session
+  output_dir: "results/llm_cache"  # teacher cache (soft targets + spans)
+
+# Typing-faithful prefix bank (re-tokenized char prefixes, from Module 0)
+prefix:
+  fractions: [0.25, 0.5, 0.75, 1.0]
+  include_anchor: true             # add a cut exactly at the anchor char
+  output_dir: "results/prefix_cache"
+
+# ---------------------------------------------------------------------------
+# Kaggle session budgets & cross-session resume
+# ---------------------------------------------------------------------------
+sessions:
+  snapshot: true                   # try to publish results/ as a Kaggle dataset
+  snapshot_slug: "toxic-early-detection-llm"
+  teacher_budget_min: 300          # Module 0 budget (same as llm.max_minutes)
+  train_budget_min: 300            # Module 3 anchored-training budget
+  fl_budget_min: 480               # Module 5 federated/DP budget
 
 # ---------------------------------------------------------------------------
 # Evaluation and early detection

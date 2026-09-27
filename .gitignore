@@ -9,17 +9,22 @@ wheels/
 # Virtual environments
 .venv
 
-Federated_Toxicity_Detection_Slides (1).pptx
-
 # Generated data (raw source is tracked, processed is not)
 data/processed/
-data/partitions/
+**/data/processed/
+**/Results*/data/processed/
 
 # Results (all experiment outputs)
-results/
 
 # Model cache
 models/cache/
+
+# Model checkpoints & weights
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
 
 # IDE files
 .vscode/

@@ -123,8 +123,15 @@ class FedPrefClient(fl.client.NumPyClient):
             collate_fn=data_collator,
         )
 
-        # Loss
-        self.loss_fn = nn.BCEWithLogitsLoss()
+        # Loss: weighted BCE for class imbalance (same approach as Module 3)
+        import numpy as np
+        labels = np.asarray(train_dataset["labels"], dtype=np.float32)
+        num_pos = labels.sum(axis=0)
+        num_neg = labels.shape[0] - num_pos
+        pos_weight = torch.tensor(
+            num_neg / np.maximum(num_pos, 1), dtype=torch.float32, device=device
+        )
+        self.loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
         print(f"  Client {cid}: {len(train_dataset)} train, {len(val_dataset)} val samples")
 
@@ -197,7 +204,7 @@ class FedPrefClient(fl.client.NumPyClient):
                 all_logits.append(logits.cpu())
                 all_labels.append(labels.cpu())
 
-        import torch
+        import numpy as np
         all_logits = torch.cat(all_logits, dim=0).numpy()
         all_labels = torch.cat(all_labels, dim=0).numpy()
         avg_loss = total_loss / len(self.val_loader)

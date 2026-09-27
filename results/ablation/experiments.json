@@ -1,0 +1,136 @@
+{
+  "results": [
+    {
+      "experiment_id": "atam_without_atam",
+      "axis": "ATAM",
+      "variant": "DistilBERT (no ATAM)",
+      "f1_macro": 0.6874540118847362,
+      "accuracy": 0.9390142861281984,
+      "roc_auc": 0.992319939418114,
+      "trainable_params": 66367494,
+      "total_params": 66367494,
+      "training_time_s": 38.839128494262695,
+      "notes": ""
+    },
+    {
+      "experiment_id": "atam_with_atam",
+      "axis": "ATAM",
+      "variant": "DistilBERT + ATAM",
+      "f1_macro": 0.7098658484197036,
+      "accuracy": 0.9231203728088487,
+      "roc_auc": 0.986559945203362,
+      "trainable_params": 66963462,
+      "total_params": 66963462,
+      "training_time_s": 0.36672091484069824,
+      "notes": ""
+    },
+    {
+      "experiment_id": "prefix_full",
+      "axis": "Prefix Length",
+      "variant": "Full text",
+      "f1_macro": 0.65580836121682,
+      "accuracy": 0.9373235229154988,
+      "roc_auc": 0.9910111501174321,
+      "trainable_params": 66367494,
+      "total_params": 66367494,
+      "training_time_s": 0.2727491855621338,
+      "notes": ""
+    },
+    {
+      "experiment_id": "prefix_prefix_64",
+      "axis": "Prefix Length",
+      "variant": "Prefix 64 tokens",
+      "f1_macro": 0.7208072577796045,
+      "accuracy": 0.9204116898859162,
+      "roc_auc": 0.99469909852162,
+      "trainable_params": 66367494,
+      "total_params": 66367494,
+      "training_time_s": 0.28054165840148926,
+      "notes": ""
+    },
+    {
+      "experiment_id": "prefix_prefix_16",
+      "axis": "Prefix Length",
+      "variant": "Prefix 16 tokens",
+      "f1_macro": 0.7332442640800422,
+      "accuracy": 0.9242467822135656,
+      "roc_auc": 0.986818249672071,
+      "trainable_params": 66367494,
+      "total_params": 66367494,
+      "training_time_s": 0.2819499969482422,
+      "notes": ""
+    },
+    {
+      "experiment_id": "fed_centralized",
+      "axis": "Federated Rounds",
+      "variant": "Centralized",
+      "f1_macro": 0.6683404509853433,
+      "accuracy": 0.9260848448591908,
+      "roc_auc": 0.9902475643163223,
+      "trainable_params": 66367494,
+      "total_params": 66367494,
+      "training_time_s": 0.27071547508239746,
+      "notes": ""
+    },
+    {
+      "experiment_id": "fed_fed_10",
+      "axis": "Federated Rounds",
+      "variant": "Federated 10 rounds",
+      "f1_macro": 0.6931945018642115,
+      "accuracy": 0.9258245828039608,
+      "roc_auc": 0.9911185289472237,
+      "trainable_params": 66367494,
+      "total_params": 66367494,
+      "training_time_s": 0.27652812004089355,
+      "notes": ""
+    },
+    {
+      "experiment_id": "fed_fed_25",
+      "axis": "Federated Rounds",
+      "variant": "Federated 25 rounds",
+      "f1_macro": 0.6639493860652042,
+      "accuracy": 0.9258428929707044,
+      "roc_auc": 0.9886636184329369,
+      "trainable_params": 66367494,
+      "total_params": 66367494,
+      "training_time_s": 0.2940211296081543,
+      "notes": ""
+    },
+    {
+      "experiment_id": "opt_full_precision",
+      "axis": "Optimization",
+      "variant": "FP32",
+      "f1_macro": 0.6956069984217036,
+      "accuracy": 0.9357035192278603,
+      "roc_auc": 0.9869967378215836,
+      "trainable_params": 66367494,
+      "total_params": 66367494,
+      "training_time_s": 0.27413320541381836,
+      "notes": ""
+    },
+    {
+      "experiment_id": "opt_quantized",
+      "axis": "Optimization",
+      "variant": "INT8 Quantized",
+      "f1_macro": 0.7014234438413611,
+      "accuracy": 0.9318482913772409,
+      "roc_auc": 0.9854645041272,
+      "trainable_params": 66367494,
+      "total_params": 66367494,
+      "training_time_s": 0.2793083190917969,
+      "notes": ""
+    },
+    {
+      "experiment_id": "opt_pruned_30",
+      "axis": "Optimization",
+      "variant": "Pruned 30%",
+      "f1_macro": 0.7107544851901438,
+      "accuracy": 0.9234104824737459,
+      "roc_auc": 0.9856505159298528,
+      "trainable_params": 66367494,
+      "total_params": 66367494,
+      "training_time_s": 0.2728395462036133,
+      "notes": ""
+    }
+  ]
+}

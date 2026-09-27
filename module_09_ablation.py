@@ -1,18 +1,3 @@
-#!/usr/bin/env python3
-"""
-===============================================================================
-MODULE 9: Ablation Study
-===============================================================================
-
-Systematically compares design choices across 6 axes:
-  - Model size, LoRA rank, Prefix curriculum, Fed rounds,
-    Non-IID severity, Non-IID type
-
-Run:
-    uv run python module_09_ablation.py
-===============================================================================
-"""
-
 import sys
 from pathlib import Path
 
@@ -27,7 +12,7 @@ from evaluation.ablation import AblationRunner
 
 def main():
     print("=" * 60)
-    print("FedPref: Ablation Study (Module 9)")
+    print("MODULE 9: Ablation Study")
     print("=" * 60)
 
     config = load_config("configs/config.yaml")
@@ -48,7 +33,7 @@ def main():
     print(runner.summary_table())
 
     print(f"\n{'='*60}")
-    print("MODULE 9 COMPLETE ✓")
+    print("MODULE 9 COMPLETE")
     print("=" * 60)
 
 
